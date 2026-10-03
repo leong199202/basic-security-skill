@@ -20,6 +20,8 @@ Each check has a stable ID so new threats can be compared against what is alread
 | AI features | SEC-21 – SEC-22 |
 | Deployment and ops | SEC-23 – SEC-30 |
 | Server trust boundaries (added 2026-10) | SEC-31 – SEC-35 |
+| Storage, database functions and hidden routes (added 2026-10) | SEC-36 – SEC-39 |
+| AI coding tools in the repo (added 2026-10) | SEC-40 |
 | Mobile | SEC-M1 – SEC-M4 |
 
 New checks are appended with new IDs; existing IDs are never renumbered.
