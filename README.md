@@ -3,7 +3,7 @@
 A Claude skill that runs a security pass on an app when you say **"basic security"**: it audits the code against a pre-launch checklist for AI/vibe-coded apps and fixes the gaps it finds.
 
 - Skill: [`skills/basic-security/SKILL.md`](skills/basic-security/SKILL.md)
-- Source checklist: *The Complete Pre-Launch Security Checklist for Vibe-Coded Apps* (Notion)
+- Source checklist: [The Complete Pre-Launch Security Checklist for Vibe-Coded Apps](https://app.notion.com/p/The-Complete-Pre-Launch-Security-Checklist-for-Vibe-Coded-Apps-3b7512560bf28158a7a9e80ce3849e1e) (Notion)
 
 ## Structure
 
@@ -29,3 +29,8 @@ New checks are appended with new IDs; existing IDs are never renumbered.
 ## Updates
 
 Every two weeks the top AI-coding security issues are reviewed against this skill. Issues it does not already cover are offered as optional additions, and only the ones accepted are added here.
+
+## Credits
+
+- SEC-01 to SEC-30 and SEC-M1 to SEC-M4 are based on [The Complete Pre-Launch Security Checklist for Vibe-Coded Apps](https://app.notion.com/p/The-Complete-Pre-Launch-Security-Checklist-for-Vibe-Coded-Apps-3b7512560bf28158a7a9e80ce3849e1e) (Notion).
+- SEC-31 to SEC-40 came from the 2026-10 research review. Each check's source links are listed in the **Sources** section of [`SKILL.md`](skills/basic-security/SKILL.md#sources).

@@ -5,7 +5,7 @@ description: Use when the user says "basic security" (or asks for a security pas
 
 # Basic Security
 
-When the user says **"basic security"**, audit their code and close the security gaps you find. Base reference: *The Complete Pre-Launch Security Checklist for Vibe-Coded Apps* (Notion). Each check has a stable ID (`SEC-xx`) so later reviews can compare new threats against what this skill already covers. Do not renumber existing IDs; append new ones.
+When the user says **"basic security"**, audit their code and close the security gaps you find. Base reference: [*The Complete Pre-Launch Security Checklist for Vibe-Coded Apps*](https://app.notion.com/p/The-Complete-Pre-Launch-Security-Checklist-for-Vibe-Coded-Apps-3b7512560bf28158a7a9e80ce3849e1e) (Notion), the source for SEC-01 to SEC-30 and SEC-M1 to SEC-M4. Sources for later additions are listed under **Sources** at the end. Each check has a stable ID (`SEC-xx`) so later reviews can compare new threats against what this skill already covers. Do not renumber existing IDs; append new ones.
 
 ## Workflow
 
@@ -237,3 +237,18 @@ Each check here starts with **In plain words** so the report can explain it to a
 - Server is the trust boundary: never trust the client for identity, price, role, or limits.
 - Smallest correct fix; match the codebase's style; don't widen scope.
 - Re-run "basic security" after major feature changes, since new features open new holes.
+
+## Sources
+
+- Base checklist (SEC-01 to SEC-30, SEC-M1 to SEC-M4): [The Complete Pre-Launch Security Checklist for Vibe-Coded Apps](https://app.notion.com/p/The-Complete-Pre-Launch-Security-Checklist-for-Vibe-Coded-Apps-3b7512560bf28158a7a9e80ce3849e1e) (Notion), contributed by the skill's owner.
+- 2026-10 research additions:
+- SEC-31: [Valtik Studios](https://www.valtikstudios.com/blog/vibe-coded-apps-69-vulns-pattern-analysis-2026), [Vibe-Eval 2026 report](https://vibe-eval.com/updates/2026-ai-coding-security-report/)
+- SEC-32: [Valtik Studios](https://www.valtikstudios.com/blog/vibe-coded-apps-69-vulns-pattern-analysis-2026), [Launch Ready Code](https://launchreadycode.com/resources/state-of-vibe-code-security-june-2026), [Arnica](https://www.arnica.io/blog/vibe-coding-security-risks)
+- SEC-33: [Security Boulevard](https://securityboulevard.com/2026/05/5-vulnerabilities-in-every-vibe-coded-app/), [Vibe-Eval 14 patterns](https://vibe-eval.com/ai-security/vibe-coding-vulnerabilities/)
+- SEC-34: [Security Boulevard](https://securityboulevard.com/2026/05/5-vulnerabilities-in-every-vibe-coded-app/)
+- SEC-35: [Valtik Studios](https://www.valtikstudios.com/blog/vibe-coded-apps-69-vulns-pattern-analysis-2026), [Vibe-Eval 14 patterns](https://vibe-eval.com/ai-security/vibe-coding-vulnerabilities/)
+- SEC-36: [Vibe-Eval 14 patterns](https://vibe-eval.com/ai-security/vibe-coding-vulnerabilities/), [Vibe App Scanner](https://vibeappscanner.com/issues/supabase)
+- SEC-37: [Vibe App Scanner](https://vibeappscanner.com/issues/supabase)
+- SEC-38: [Vibe-Eval 14 patterns](https://vibe-eval.com/ai-security/vibe-coding-vulnerabilities/), [Arnica](https://www.arnica.io/blog/vibe-coding-security-risks)
+- SEC-39: General web-security practice (OWASP path traversal); added at the owner's request in the 2026-10 review
+- SEC-40: [MintMCP](https://www.mintmcp.com/blog/security-vulnerabilities-with-mcp), [Cloud Security Alliance](https://labs.cloudsecurityalliance.org/research/csa-research-note-mcp-ai-coding-assistant-credential-theft-2/)
