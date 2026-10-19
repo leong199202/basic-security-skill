@@ -306,7 +306,7 @@ Each check here starts with **In plain words** so the report can explain it to a
 - SEC-36: [Vibe-Eval 14 patterns](https://vibe-eval.com/ai-security/vibe-coding-vulnerabilities/), [Vibe App Scanner](https://vibeappscanner.com/issues/supabase)
 - SEC-37: [Vibe App Scanner](https://vibeappscanner.com/issues/supabase)
 - SEC-38: [Vibe-Eval 14 patterns](https://vibe-eval.com/ai-security/vibe-coding-vulnerabilities/), [Arnica](https://www.arnica.io/blog/vibe-coding-security-risks)
-- SEC-39: General web-security practice (OWASP path traversal); added at the owner's request in the 2026-10 review
+- SEC-39: [OWASP: Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal), [OWASP Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) (general web-security practice, added at the owner's request in the 2026-10 review)
 - SEC-40: [MintMCP](https://www.mintmcp.com/blog/security-vulnerabilities-with-mcp), [Cloud Security Alliance](https://labs.cloudsecurityalliance.org/research/csa-research-note-mcp-ai-coding-assistant-credential-theft-2/)
 - 2026-10-19 research additions:
 - SEC-41: [MyBroadband on the Bootlegger dashboard exposure](https://mybroadband.co.za/news/security/672647-ceo-of-top-south-african-coffee-franchise-responds-after-vibe-coded-web-application-exposed-sensitive-data.html)
@@ -319,4 +319,4 @@ Each check here starts with **In plain words** so the report can explain it to a
 - SEC-47: [Anish Gandhi: Supabase Realtime broadcast security](https://anishgandhi.com/supabase-realtime-broadcast-security-boundary/), [Ubserve Supabase checklist](https://ubserve.com/platform-guides/supabase-security-checklist-ai-built-apps)
 - SEC-48: [Ubserve Supabase checklist](https://ubserve.com/platform-guides/supabase-security-checklist-ai-built-apps)
 - SEC-49: [Ubserve Supabase checklist](https://ubserve.com/platform-guides/supabase-security-checklist-ai-built-apps)
-- SEC-50: General web-security practice (OWASP unvalidated redirects); added at the owner's request in the 2026-10-19 review
+- SEC-50: [OWASP Unvalidated Redirects and Forwards Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) (general web-security practice, added at the owner's request in the 2026-10-19 review)
