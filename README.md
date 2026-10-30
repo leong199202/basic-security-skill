@@ -34,7 +34,7 @@ Think of it like a home inspection: you get a list of what's wrong and what woul
 ### What it fixes and what it leaves to you
 
 - **Fixes in code:** things that are safe and contained, such as moving a secret key out of the website code, adding a missing permission check, or limiting how fast someone can retry a password.
-- **Launch and legal checks (flag only):** the launch-readiness checks (test vs live setup, outage handling, alerts, privacy policy and account deletion, email spoofing, login leaks, database changes, slow pages, account ownership) and the privacy-law checks by country are only reported, never changed automatically. The law checks are general information, not legal advice.
+- **Launch and privacy-law checks:** the launch-readiness checks (test vs live setup, outage handling, alerts, account deletion, login leaks, database changes, slow pages) and the privacy-law checks by country work the same way: what can be done in code is fixed (for example a cookie consent banner, a "delete my account" button, an unsubscribe link, a "you're chatting with an AI" notice), and the rest is marked "Needs you" (for example signing up for alerts, adding email DNS records, appointing a data protection officer, final privacy-policy wording). The law checks are general information, not legal advice.
 - **Leaves to you (marked "Needs you"):** anything outside the code or hard to undo, such as changing a leaked password or key, turning on backups, billing limits or two-step login in a provider's dashboard, or big upgrades that might break the app. Claude tells you exactly where to click.
 
 After making fixes, Claude runs your project's existing tests to check nothing broke.
@@ -75,8 +75,8 @@ Each check has a stable ID so new threats can be compared against what is alread
 | Hidden data, shop logic, platforms and assistant secrets (added 2026-10-19) | SEC-41 – SEC-45 |
 | AI chat, live updates and login settings (added 2026-10-19) | SEC-46 – SEC-50 |
 | Supply chain, pipelines, agents and defaults (added 2026-10-30) | SEC-51 – SEC-58 |
-| Launch readiness, flag only (added 2026-10-30) | SEC-59 – SEC-67 |
-| Digital and privacy law by region, flag only (added 2026-10-30) | LAW-01 – LAW-17 |
+| Launch readiness (added 2026-10-30) | SEC-59 – SEC-67 |
+| Digital and privacy law by region (added 2026-10-30) | LAW-01 – LAW-17 |
 | Mobile | SEC-M1 – SEC-M4 |
 
 New checks are appended with new IDs; existing IDs are never renumbered.
