@@ -350,6 +350,24 @@ Each check here starts with **In plain words** so the report can explain it to a
 - Fix: remove blanket auto-approve settings from shared config; re-enable workspace trust. **Needs you:** update Cursor, Copilot, VS Code, Claude Code, Gemini CLI and similar tools to the latest version; open untrusted repos in a disposable container or VM; avoid using the assistant's built-in browser for untrusted pages or local HTML.
 - Source: [The Register: researchers find bugs in 5 AI developer tools, Oct 29 2026](https://www.theregister.com/security/2026/10/29/researchers-find-bugs-in-5-ai-developer-tools-with-openai-and-microsoft-flaws-still-unpatched/5306508), [Stingrai: AI coding assistant CVEs 2026](https://www.stingrai.io/blog/ai-coding-assistant-cves-2026)
 
+**SEC-56 Don't "fix" database permission errors by granting everything**
+- In plain words: a locked door, and the quick fix is removing every lock in the building. From Oct 30 2026 Supabase stops giving new tables automatic access through its public API, so AI builders will hit "permission denied" and may paste in broad `GRANT ALL ... TO anon`. That opens data to anyone and sidesteps the row-level security check (SEC-04).
+- Look for: migrations or SQL with `GRANT ALL`, `GRANT ... ON ALL TABLES IN SCHEMA public`, or `ALTER DEFAULT PRIVILEGES ... GRANT` to `anon` or `public`; `anon` granted insert/update/delete; tables with grants but no `ENABLE ROW LEVEL SECURITY` and policies; the same pattern on other Postgres hosts.
+- Fix: grant only the needed actions to `authenticated` per table, give `anon` read access only on tables meant to be public, and enable row-level security plus policies in the same migration as the table. Don't grant across a whole schema.
+- Source: [VibeTierList: Supabase's 30 Oct change](https://dev.to/vibetierlist/supabases-30-oct-change-the-next-table-your-ai-builder-creates-needs-a-grant-heres-the-2-minute-3c69) (secondary source quoting Supabase's changelog)
+
+**SEC-57 Don't share one long-lived master database password**
+- In plain words: one master key copied into every pocket, so one stolen coat loses the house. Most of October 2026's 28 "Black October" incidents came from long-lived database passwords sitting in env files, CI and consoles; the compromised LiteLLM release read exactly those.
+- Look for: the same database URL/user (often the owner or `postgres` superuser) used by the app, migrations, scripts, CI and AI tools; connection strings in `.env`, CI settings and shell history; databases reachable from the public internet (open `0.0.0.0` access, public host with no allowlist); connections without TLS (`sslmode=disable`); old Postgres, PgBouncer or pgvector versions.
+- Fix: create a separate minimal-rights database user per service (app, migrations, reporting, each AI tool); block public database access and require TLS (`sslmode=require` or stricter); load credentials from a secrets manager. **Needs you:** rotate database passwords on a schedule and now if exposed, and update Postgres/PgBouncer to patched releases (e.g. PgBouncer 1.26.1 fixes a login bypass).
+- Source: [Readyset: Black October 2026 review](https://readyset.io/blog/black-october-what-actually-happened-and-what-to-patch)
+
+**SEC-58 Never run user-supplied commands for AI tool (MCP) servers**
+- In plain words: a "run this for me" box on your site that executes whatever a stranger types. Several AI products let users add an MCP server (a plug-in for AI tools) where the user's command went straight to the server's shell, giving remote code execution.
+- Look for: settings, admin pages or API routes where users enter an MCP server `command`/`args`/URL that the backend launches (`StdioServerParameters`, `child_process.spawn`/`exec`, `subprocess` fed from request data); allowlists that still permit exec flags (`npx -c`, `node -e`, `python -c`, `sh -c`); prompt-injectable ways for model output to edit the MCP config; tool results from MCP servers passed to the model as trusted instructions.
+- Fix: allow only a fixed list of known servers chosen by id, never pass user text as a command or arguments, require human approval for MCP config changes, run servers in a sandbox with minimal permissions, and treat anything an MCP tool returns as untrusted data (see SEC-21).
+- Source: [OX Security: MCP STDIO supply-chain advisory](https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/)
+
 ## 📱 Mobile (only if it's a mobile app)
 
 **SEC-M1 No API keys in the app bundle**
@@ -411,3 +429,6 @@ Each check here starts with **In plain words** so the report can explain it to a
 - SEC-53: [Bitdefender: PixelLeak](https://www.bitdefender.com/en-us/blog/hotforsecurity/pixelleak-ai-coding-agents-github-screenshots)
 - SEC-54: [Invicti: security issues in vibe-coded web apps analyzed](https://www.invicti.com/blog/security-labs/security-issues-in-vibe-coded-web-apps-analyzed)
 - SEC-55: [The Register, Oct 29 2026](https://www.theregister.com/security/2026/10/29/researchers-find-bugs-in-5-ai-developer-tools-with-openai-and-microsoft-flaws-still-unpatched/5306508), [Stingrai CVE roundup](https://www.stingrai.io/blog/ai-coding-assistant-cves-2026)
+- SEC-56: [VibeTierList: Supabase's 30 Oct change](https://dev.to/vibetierlist/supabases-30-oct-change-the-next-table-your-ai-builder-creates-needs-a-grant-heres-the-2-minute-3c69)
+- SEC-57: [Readyset: Black October 2026 review](https://readyset.io/blog/black-october-what-actually-happened-and-what-to-patch)
+- SEC-58: [OX Security: MCP STDIO advisory](https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/)

@@ -73,7 +73,7 @@ Each check has a stable ID so new threats can be compared against what is alread
 | AI coding tools in the repo (added 2026-10) | SEC-40 |
 | Hidden data, shop logic, platforms and assistant secrets (added 2026-10-19) | SEC-41 – SEC-45 |
 | AI chat, live updates and login settings (added 2026-10-19) | SEC-46 – SEC-50 |
-| Supply chain, pipelines, agents and defaults (added 2026-10-30) | SEC-51 – SEC-55 |
+| Supply chain, pipelines, agents and defaults (added 2026-10-30) | SEC-51 – SEC-58 |
 | Mobile | SEC-M1 – SEC-M4 |
 
 New checks are appended with new IDs; existing IDs are never renumbered.
@@ -85,7 +85,7 @@ Every two weeks the top AI-coding security issues are reviewed against this skil
 ## Credits
 
 - SEC-01 to SEC-30 and SEC-M1 to SEC-M4 are based on [The Complete Pre-Launch Security Checklist for Vibe-Coded Apps](https://app.notion.com/p/The-Complete-Pre-Launch-Security-Checklist-for-Vibe-Coded-Apps-3b7512560bf28158a7a9e80ce3849e1e) (Notion).
-- SEC-31 to SEC-40 came from the 2026-10 research review, and SEC-41 to SEC-50 from the 2026-10-19 reviews, and SEC-51 to SEC-55 from the 2026-10-30 review. Each check's source links are listed in the **Sources** section of [`SKILL.md`](skills/basic-security/SKILL.md#sources).
+- SEC-31 to SEC-40 came from the 2026-10 research review, and SEC-41 to SEC-50 from the 2026-10-19 reviews, and SEC-51 to SEC-58 from the 2026-10-30 review. Each check's source links are listed in the **Sources** section of [`SKILL.md`](skills/basic-security/SKILL.md#sources).
 
 ## License
 
