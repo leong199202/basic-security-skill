@@ -11,10 +11,10 @@ When the user says **"basic security"**, audit their code and close the security
 
 **Audit only.** If the user says "audit only" (or "review only", "report only", "don't change anything"), run every step below except fixing: make no code, config or file changes, commits or PRs. Mark gaps as **Gap** instead of Fixed, and for each one say in plain words what you would change. The user can then say "basic security" (without "audit only") to apply the fixes.
 
-1. **Scope.** Identify the stack: languages, frameworks, database/BaaS (Supabase, Firebase, Postgres, Mongo...), auth provider, payment provider, LLM usage, hosting, mobile (React Native/Expo/Swift/Kotlin). Mark sections that don't apply (Payments, AI, Mobile) as N/A and say so.
+1. **Scope.** Identify the stack: languages, frameworks, database/BaaS (Supabase, Firebase, Postgres, Mongo...), auth provider, payment provider, LLM usage, hosting, mobile (React Native/Expo/Swift/Kotlin). Note where the app's users are likely to be (languages, currencies, payment countries, sign-up country lists) for the law section. Mark sections that don't apply (Payments, AI, Mobile) as N/A and say so.
 2. **Start Here first.** Run the 7 priority checks before anything else: SEC-01, SEC-03, SEC-04, SEC-07, SEC-11, SEC-12, SEC-14.
 3. **Full pass.** Work section by section. For each check: search for the pattern, confirm with a read of the code (no fixing on a grep hit alone), then fix.
-4. **Fix vs. flag.** Fix in code what is safe and local. Flag (don't silently do) anything that needs the user: rotating leaked keys, rewriting git history, provider dashboard settings (billing caps, backups, 2FA, HTTPS at the host), breaking dependency upgrades, data migrations for encryption.
+4. **Fix vs. flag.** Fix in code what is safe and local. Flag (don't silently do) anything that needs the user: rotating leaked keys, rewriting git history, provider dashboard settings (billing caps, backups, 2FA, HTTPS at the host), breaking dependency upgrades, data migrations for encryption. The **Launch readiness** (SEC-59 to SEC-67) and **Digital and privacy law** (LAW-01 to LAW-17) sections are always flag only.
 5. **Verify.** Run the project's lint/typecheck/tests after changes. Never weaken or skip a test to make it pass.
 6. **Report.** End with a table: `ID | Check | Status (Fixed / Already OK / Needs you / N/A, or Gap in audit-only mode) | Where (file:line) | What changed`. Lead with anything marked "Needs you". Explain each Fixed or Needs-you item in plain, non-technical words (use the check's "In plain words" line where it has one).
 
@@ -368,6 +368,174 @@ Each check here starts with **In plain words** so the report can explain it to a
 - Fix: allow only a fixed list of known servers chosen by id, never pass user text as a command or arguments, require human approval for MCP config changes, run servers in a sandbox with minimal permissions, and treat anything an MCP tool returns as untrusted data (see SEC-21).
 - Source: [OX Security: MCP STDIO supply-chain advisory](https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/)
 
+## 🚀 Launch readiness (flag only, added from 2026-10-30 pre-launch research)
+
+These checks are **flag only**: look for the gap and report it as **Needs you** with the plain-words explanation and the suggested fix. Don't change code for them unless the user asks you to. In audit-only mode they show as **Gap** like everything else.
+
+**SEC-59 Separate test and live environments, with a way to undo a bad release**
+- In plain words: testing on the same database your customers use, with no "undo" button. You ask the AI to "clean up old test users" and it runs against live data, or a Friday-night update breaks sign-up and you can't get back to Thursday's version.
+- Look for: one set of keys/database URL for every environment (a single `.env`, no `.env.production`/staging config, CI deploying straight to production); seed or test scripts pointed at the production database; no record of how to redeploy the previous version (no tagged releases, no host rollback documented).
+- Flag: **Needs you** — create a staging environment with its own keys and fake data, and practise a one-click rollback on the host (e.g. Vercel/Netlify "promote previous deployment", Render/Railway rollback) before launch day. See also SEC-49 for keeping AI assistants off the live database.
+- Source: [Leanware production readiness checklist](https://leanware.co/insights/production-readiness-checklist-vibe-coded-apps), [SaaSCity pre-launch checklist](https://saascity.io/blog/pre-launch-security-checklist-vibe-coded-startups-2026)
+
+**SEC-60 Fail gracefully when an outside service is slow or down**
+- In plain words: AI-written code assumes payments, email and AI models always answer instantly. When OpenAI has a 20-minute outage, every page that touches AI spins forever and users think your whole app is dead.
+- Look for: `fetch`/`axios`/HTTP/SDK calls to outside services with no timeout or `AbortController`; no `try/catch` or error state around them; no React/Next.js error boundary (`error.tsx`, `ErrorBoundary`); background jobs with no retry limit; pages that render blank when one request fails.
+- Flag: **Needs you** — add timeouts and error handling to every outside call, a friendly fallback message, and error boundaries so one broken part doesn't blank the page. Test by switching each service off.
+- Source: [Wavect readiness checklist, item 05](https://wavect.io/blog/vibe-code-production-readiness-checklist/), [AppInstitute: is my vibe-coded app ready?](https://appinstitute.com/is-my-vibe-coded-app-ready/)
+
+**SEC-61 Get alerted when the app breaks or goes down**
+- In plain words: SEC-28 makes sure errors are written down; this makes sure someone actually hears about them. Otherwise checkout crashes at 2am and you find out at lunch from an angry customer.
+- Look for: no error-tracking SDK (Sentry, Bugsnag, Rollbar, LogRocket, host error alerts); no uptime/health-check endpoint; no alert destination configured.
+- Flag: **Needs you** — connect error tracking and an uptime checker that notifies your phone (email, SMS or chat app), then trigger a test error to confirm the alert arrives.
+- Source: [Leanware production readiness checklist](https://leanware.co/insights/production-readiness-checklist-vibe-coded-apps), [Magora: AI-built app to production](https://magora-systems.com/ai-built-app-to-production/)
+
+**SEC-62 Privacy policy, account deletion and data export**
+- In plain words: if you collect emails or other personal data, most privacy laws expect an honest privacy notice and a way for people to delete their account. A user asks you to delete their data and it turns out to be spread over five tables and three services with no way to remove it. Apple also rejects apps without in-app account deletion.
+- Look for: no privacy policy or terms page/route; no "delete my account" path (UI and server endpoint that removes or anonymises the user's rows, files and third-party records); no "download my data" path; a privacy page that doesn't match what the code collects (analytics, AI providers, payment and email services).
+- Flag: **Needs you** — publish an accurate privacy policy, add working account deletion (and data export), and list which outside services receive user data. Check the country rules in the next section.
+- Source: [Magora: AI-built app to production (UK GDPR, Apple 5.1.1(v))](https://magora-systems.com/ai-built-app-to-production/), [Leanware production readiness checklist](https://leanware.co/insights/production-readiness-checklist-vibe-coded-apps)
+
+**SEC-63 Stop others sending fake email from your domain (SPF, DKIM, DMARC)**
+- In plain words: without three DNS records anyone can send email that looks like it came from your app, and your real emails tend to land in spam. A scammer emails your users "from" support@yourapp.com asking for their card details.
+- Look for: the app sends email (Resend, SendGrid, Postmark, SES, Mailgun, SMTP settings) from a custom domain; DNS config in the repo (if any) without SPF/DKIM/DMARC records.
+- Flag: **Needs you** — add SPF, DKIM and DMARC records for the sending domain (your email provider gives the values), starting DMARC at `p=none` and tightening to `quarantine`/`reject`.
+- Source: [SaaSCity pre-launch checklist](https://saascity.io/blog/pre-launch-security-checklist-vibe-coded-startups-2026)
+
+**SEC-64 Don't reveal which emails have an account, and make logout really log out**
+- In plain words: "No account found for this email" tells a stranger who your users are, so they can target them with phishing. And some apps only delete the login token in the browser, so a stolen token keeps working after logout.
+- Look for: sign-in, sign-up and password-reset responses that differ for known vs unknown emails ("user not found", "email already registered"); logout that only clears client storage/cookies without ending the server session or revoking the refresh token; sessions not ended after a password change.
+- Flag: **Needs you** — show the same message either way ("if an account exists, we've sent a link"), and end the session on the server at logout and password change (e.g. Supabase `signOut({ scope: 'global' })`, revoke refresh tokens).
+- Source: [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html), [SaaSCity pre-launch checklist](https://saascity.io/blog/pre-launch-security-checklist-vibe-coded-startups-2026)
+
+**SEC-65 Save database changes as files, with built-in safety rules**
+- In plain words: AI builders often change the database by clicking in a dashboard. Nothing records what changed, so you can't rebuild or undo it, and missing rules let broken data in, like an order pointing to a customer who no longer exists.
+- Look for: no migrations folder (`supabase/migrations`, `prisma/migrations`, `drizzle`, `alembic`, `db/migrate`) while the app uses a SQL database; tables without primary keys, foreign keys, `NOT NULL` or unique constraints where the code assumes them; schema described only in comments or docs.
+- Flag: **Needs you** — keep every schema change as a versioned migration file in the repo, and add foreign keys, `NOT NULL` and unique rules in the database itself.
+- Source: [Leanware production readiness checklist](https://leanware.co/insights/production-readiness-checklist-vibe-coded-apps), [RaftLabs: vibe coding to production](https://www.raftlabs.com/blog/vibe-coding-to-production-checklist)
+
+**SEC-66 Pages that still work with 10,000 rows, not just 10**
+- In plain words: AI code often loads "everything" at once or asks the database one question per item. Fine in testing, painfully slow and costly with real users, and an easy way for one person to overload the app. Your admin page loads every order ever made on each visit and takes 40 seconds at launch.
+- Look for: list queries and API endpoints with no `limit`/pagination (`select('*')` with no range, `findMany()` with no `take`); database calls inside loops (N+1); filters on columns with no index; endpoints that let the caller ask for unlimited rows.
+- Flag: **Needs you** — add pagination and a maximum page size to every list and API, replace per-item queries with one batched query or join, and index the columns you filter on.
+- Source: [Wavect readiness checklist, item 06](https://wavect.io/blog/vibe-code-production-readiness-checklist/)
+
+**SEC-67 Make sure you own the keys to the business**
+- In plain words: the code, domain, hosting and billing should sit in accounts you control, with a second trusted person who can get in. Otherwise the freelancer who set up the domain stops replying, it expires, and your app and email go dark.
+- Look for: hints that accounts belong to someone else (a freelancer's or agency's name in deploy config, `CODEOWNERS`, package scope, `vercel.json`/project IDs, billing emails in docs); secrets shared in docs or chat exports rather than a vault.
+- Flag: **Needs you** — move the repo, domain, hosting, database and payment accounts to company-owned logins, add a second owner, turn on domain auto-renew, and keep secrets in a password manager or vault (see SEC-30 for 2FA).
+- Source: [Leanware production readiness checklist](https://leanware.co/insights/production-readiness-checklist-vibe-coded-apps)
+
+## ⚖️ Digital and privacy law by region (flag only, added 2026-10-30)
+
+**General information, not legal advice.** These checks help the user spot which laws are likely to apply and what they usually require. Laws change and details depend on the business, so tell the user to confirm with a lawyer or the regulator's own guidance before relying on them.
+
+How to run this section:
+- **Work out where users are, not where the owner is.** Most of these laws apply when you offer the app to people in that place. Look for signals in the code: languages and locales, currencies and payment countries, phone number formats, country lists in sign-up forms, analytics/ads SDKs, cookie banners, hosting regions, and age fields.
+- **Flag only.** Report each law that likely applies as **Needs you**, with its plain-words line and what to do. Mark the rest N/A. Don't write legal text (policies, terms) as if it were final; offer a draft only if the user asks, and label it a draft for review.
+- Most laws share the same basics, so SEC-62 (privacy policy, deletion, export) and SEC-29/SEC-61 (backups, alerts for breach response) cover a lot of ground for all of them.
+
+**LAW-01 European Union: GDPR (personal data)**
+- In plain words: anyone in the EU using your app gets the right to know what you collect, see it, correct it, delete it and take it elsewhere, and you need a valid reason (such as consent or a contract) for each use. If you're hacked you usually have 72 hours to tell the regulator.
+- Applies when: you offer the app to people in the EU or track their behaviour, wherever your business is.
+- Flag: privacy notice listing what's collected, why and which vendors get it; a lawful reason for each use; access/delete/export requests handled; data processing agreements with vendors; a breach plan; an EU representative if you have no EU office and process EU data regularly.
+- Source: [GDPR, Regulation (EU) 2016/679 (EUR-Lex)](https://eur-lex.europa.eu/eli/reg/2016/679/oj)
+
+**LAW-02 EU and UK: cookie and tracking consent (ePrivacy Directive, UK PECR)**
+- In plain words: you need to ask before dropping non-essential cookies or trackers (analytics, ads, session replay) on someone's device. A banner that sets the trackers before anyone clicks "accept" doesn't count.
+- Applies when: EU or UK visitors, and the app uses analytics, ads pixels, session recording or similar.
+- Flag: load non-essential scripts only after opt-in consent, make "reject" as easy as "accept", and keep a record of consent. Check in code that analytics/ads scripts aren't loaded before consent.
+- Source: [ePrivacy Directive 2002/58/EC (EUR-Lex)](https://eur-lex.europa.eu/eli/dir/2002/58/oj), [ICO Guide to PECR](https://ico.org.uk/for-organisations/direct-marketing-and-privacy-and-electronic-communications/guide-to-pecr/)
+
+**LAW-03 European Union: Digital Services Act (user posts and marketplaces)**
+- In plain words: if users can post content or sell things through your app, you need a way for people to report illegal content, clear rules in your terms, and reasons given when you remove something.
+- Applies when: EU users and the app hosts user content (posts, comments, listings, uploads) or connects buyers and sellers.
+- Flag: a "report this" button, terms that explain moderation, a point of contact, and (for marketplaces) checking who your traders are.
+- Source: [Digital Services Act, Regulation (EU) 2022/2065 (EUR-Lex)](https://eur-lex.europa.eu/eli/reg/2022/2065/oj)
+
+**LAW-04 European Union: AI Act transparency (chatbots and AI-generated content)**
+- In plain words: since 2 August 2026, people in the EU must be told when they're talking to an AI rather than a person, unless it's obvious, and AI-generated images, audio and video need labelling.
+- Applies when: EU users and the app has a chatbot, AI agent, or generates or edits images, audio, video or published text with AI.
+- Flag: show a clear "you're chatting with an AI" notice, label AI-generated media (machine-readable marking where your model provider supports it), and disclose deepfakes.
+- Source: [AI Act, Regulation (EU) 2024/1689 (EUR-Lex)](https://eur-lex.europa.eu/eli/reg/2024/1689/oj), [Baker Botts: Article 50 obligations go live](https://www.bakerbotts.com/thought-leadership/publications/2026/september/eu-ai-act-article-50-transparency-obligations-go-live)
+
+**LAW-05 European Union: Accessibility Act (and accessibility generally)**
+- In plain words: some digital services, including online shops, banking and e-books, must be usable by people with disabilities, for example with a screen reader or keyboard only. Accessibility lawsuits are also common in the US.
+- Applies when: EU consumers and the app sells products or services online (small micro-enterprises are partly exempt); accessibility is good practice everywhere.
+- Flag: aim for WCAG 2.2 AA: alt text on images, labelled form fields, keyboard navigation, enough colour contrast, captions on video.
+- Source: [European Accessibility Act, Directive (EU) 2019/882 (EUR-Lex)](https://eur-lex.europa.eu/eli/dir/2019/882/oj), [W3C WCAG 2 overview](https://www.w3.org/WAI/standards-guidelines/wcag/)
+
+**LAW-06 United Kingdom: UK GDPR, ICO fee and Online Safety Act**
+- In plain words: the UK has its own copy of GDPR (same basics as LAW-01), most businesses using personal data must pay a yearly fee to the ICO, and apps where users can talk to or share with each other have duties to protect users, especially children.
+- Applies when: UK users.
+- Flag: the LAW-01 basics; check whether you must pay the ICO data protection fee; if users can post or message each other, do the Online Safety Act risk assessment and add reporting tools and child protections.
+- Source: [ICO UK GDPR guidance](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/), [ICO data protection fee](https://ico.org.uk/for-organisations/data-protection-fee/), [GOV.UK Online Safety Act explainer](https://www.gov.uk/government/publications/online-safety-act-explainer/online-safety-act-explainer)
+
+**LAW-07 United States: California (CCPA/CPRA) and other state privacy laws**
+- In plain words: more than 20 US states now have their own privacy laws. California's is the best known: people can ask what you hold, ask you to delete it, and tell you not to "sell or share" it, including automatically through a browser setting called Global Privacy Control.
+- Applies when: US users and you meet a state's size thresholds (revenue or number of people's data). Check each state; thresholds differ.
+- Flag: a privacy notice covering state rights; a "Do Not Sell or Share My Personal Information" link if you use ad pixels or sell data; honour the Global Privacy Control signal; handle access/delete requests.
+- Source: [California AG: CCPA](https://oag.ca.gov/privacy/ccpa), [IAPP US state privacy legislation tracker](https://iapp.org/resources/article/us-state-privacy-legislation-tracker/), [Global Privacy Control](https://globalprivacycontrol.org/)
+
+**LAW-08 United States: children under 13 (COPPA)**
+- In plain words: if your app is aimed at children under 13, or you know a user is under 13, you need verifiable parental consent before collecting their personal data.
+- Applies when: US users and the app is child-directed or knowingly collects data from under-13s.
+- Flag: add an age check at sign-up, get parental consent or block under-13s, and limit data collected from children. Other regions have similar rules (UK Children's Code, EU GDPR age of consent, Australia below, Brazil's ECA Digital).
+- Source: [FTC: COPPA Rule](https://www.ftc.gov/legal-library/browse/rules/childrens-online-privacy-protection-rule-coppa)
+
+**LAW-09 Marketing emails and messages (US CAN-SPAM, Canada CASL, Australia Spam Act and others)**
+- In plain words: newsletters and promo emails need an unsubscribe link that works, and in many countries (Canada, Australia, EU/UK) you need the person's permission first.
+- Applies when: the app sends marketing emails or SMS, not just receipts and password resets.
+- Flag: a working one-click unsubscribe honoured quickly (CAN-SPAM: within 10 business days), your real business address in the email, opt-in consent where required, and no pre-ticked consent boxes.
+- Source: [FTC: CAN-SPAM compliance guide](https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business), [CRTC: Canada's anti-spam legislation](https://crtc.gc.ca/eng/internet/anti.htm)
+
+**LAW-10 Canada: PIPEDA (and Quebec Law 25)**
+- In plain words: Canada requires consent for collecting personal data, a person responsible for privacy, and reporting breaches that risk significant harm. Quebec has stricter rules of its own.
+- Applies when: Canadian users.
+- Flag: the LAW-01 style basics, a named privacy contact, a breach log and notification process; check Quebec rules if you have users there.
+- Source: [Office of the Privacy Commissioner of Canada: PIPEDA](https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/)
+
+**LAW-11 Australia: Privacy Act and social media minimum age**
+- In plain words: businesses over A$3 million turnover (and some smaller ones, such as health services) must follow 13 privacy principles. Since 10 December 2025, social media platforms must take reasonable steps to stop under-16s having accounts.
+- Applies when: Australian users; the age rule applies if the app is a social media platform under the law.
+- Flag: check whether you're covered by the Privacy Act; follow the privacy principles and notifiable data breach scheme; if social, check the minimum-age rules.
+- Source: [OAIC: The Privacy Act](https://www.oaic.gov.au/privacy/the-privacy-act), [Australian Government: social media minimum age](https://infrastructure.gov.au/media-communications/internet/online-safety/current-legislation/social-media-minimum-age)
+
+**LAW-12 Singapore: PDPA**
+- In plain words: you need consent and a clear purpose to collect personal data, a named data protection officer, and you must tell the regulator within 3 days once you've assessed that a breach is notifiable (for example, 500 or more people affected or likely significant harm).
+- Applies when: you collect personal data in Singapore.
+- Flag: appoint a DPO and publish their contact, get consent and state the purpose, set up a breach assessment and notification process, and check the Do Not Call registry before marketing calls or SMS to Singapore numbers.
+- Source: [PDPC: PDPA overview](https://www.pdpc.gov.sg/overview-of-pdpa/the-legislation/personal-data-protection-act), [FAQ guide to data breach notifications in Singapore](https://technologylawdispatch.com/post/102k337/an-faq-guide-to-data-breach-notifications-in-singapore)
+
+**LAW-13 Malaysia: PDPA (amended 2024)**
+- In plain words: since June 2025 Malaysian businesses must appoint a data protection officer, report data breaches to the Commissioner within 72 hours (and tell affected people within 7 days if there's risk of significant harm), and let people move their data elsewhere.
+- Applies when: you process personal data in commercial transactions in Malaysia.
+- Flag: appoint and register a DPO, set up a 72-hour breach notification process, support data portability requests, and check cross-border transfer rules for overseas services you use.
+- Source: [Malaysia Personal Data Protection Department](https://www.pdp.gov.my/), [ASEAN Briefing: Malaysia tightens data protection from June 2025](https://www.aseanbriefing.com/news/malaysia-tightens-data-protection-from-june-2025/)
+
+**LAW-14 India: DPDP Act 2023 and DPDP Rules 2025**
+- In plain words: India's privacy law needs clear notice and consent, honouring access/correction/deletion requests, protecting children's data with parental consent, and reporting breaches. Most duties apply from 13 May 2027, so build them in now.
+- Applies when: you process digital personal data of people in India, or offer goods or services to them.
+- Flag: plain-language consent notice, a way to withdraw consent as easily as giving it, request handling, verifiable parental consent for under-18s, and a breach process (detailed report to the Board within 72 hours).
+- Source: [Hogan Lovells: India's DPDP Act brought into force](https://www.hlc.com/en/publications/indias-digital-personal-data-protection-act-2023-brought-into-force-)
+
+**LAW-15 Brazil: LGPD**
+- In plain words: Brazil's law is close to GDPR: a legal reason for each use of data, rights to access and delete, a named data contact (DPO), and breach reporting to the ANPD.
+- Applies when: Brazilian users or data collected in Brazil.
+- Flag: the LAW-01 basics, a named DPO contact, and a breach process. Brazil also has a children's online law (ECA Digital) overseen by the same regulator.
+- Source: [ANPD (Brazil's data protection authority)](https://www.gov.br/anpd/pt-br)
+
+**LAW-16 Other countries to check when you have users there**
+- In plain words: many countries now have GDPR-style laws with the same basics (notice, consent, rights, breach reporting) plus local twists such as registration with a regulator or keeping data in-country.
+- Flag when relevant: Japan APPI ([PPC](https://www.ppc.go.jp/en/)); South Korea PIPA, strict consent rules ([PIPC](https://www.pipc.go.kr/eng/)); New Zealand Privacy Act 2020, with a new duty from May 2026 to tell people when you collect their data from someone else ([OPC NZ](https://www.privacy.org.nz/privacy-act-2020/)); South Africa POPIA, register an information officer ([Information Regulator](https://inforegulator.org.za/)). China, Indonesia, Thailand, Vietnam, the Philippines, the UAE and Saudi Arabia also have comprehensive laws, some with data-localisation rules; tell the user to check them if those markets matter.
+- Source: links above.
+
+**LAW-17 Sending personal data to other countries (cross-border transfers)**
+- In plain words: a typical vibe-coded app sends user data abroad without anyone noticing: a database in the US, an AI model in another country, analytics somewhere else. Many laws (EU, UK, Malaysia, India, China and others) limit where personal data can go or require safeguards.
+- Look for: database and hosting regions, AI provider endpoints, analytics and email services, and where each sends data.
+- Flag: list each service, the country its data goes to, and the safeguard (adequacy decision, standard contractual clauses, the vendor's data processing agreement). Pick hosting regions close to your users where the law requires it.
+- Source: [European Commission: adequacy decisions](https://commission.europa.eu/law/law-topic/data-protection/international-dimension-data-protection/adequacy-decisions_en)
+
 ## 📱 Mobile (only if it's a mobile app)
 
 **SEC-M1 No API keys in the app bundle**
@@ -432,3 +600,14 @@ Each check here starts with **In plain words** so the report can explain it to a
 - SEC-56: [VibeTierList: Supabase's 30 Oct change](https://dev.to/vibetierlist/supabases-30-oct-change-the-next-table-your-ai-builder-creates-needs-a-grant-heres-the-2-minute-3c69)
 - SEC-57: [Readyset: Black October 2026 review](https://readyset.io/blog/black-october-what-actually-happened-and-what-to-patch)
 - SEC-58: [OX Security: MCP STDIO advisory](https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/)
+
+- SEC-59: [Leanware](https://leanware.co/insights/production-readiness-checklist-vibe-coded-apps), [SaaSCity](https://saascity.io/blog/pre-launch-security-checklist-vibe-coded-startups-2026)
+- SEC-60: [Wavect](https://wavect.io/blog/vibe-code-production-readiness-checklist/), [AppInstitute](https://appinstitute.com/is-my-vibe-coded-app-ready/)
+- SEC-61: [Leanware](https://leanware.co/insights/production-readiness-checklist-vibe-coded-apps), [Magora](https://magora-systems.com/ai-built-app-to-production/)
+- SEC-62: [Magora](https://magora-systems.com/ai-built-app-to-production/), [Leanware](https://leanware.co/insights/production-readiness-checklist-vibe-coded-apps)
+- SEC-63: [SaaSCity](https://saascity.io/blog/pre-launch-security-checklist-vibe-coded-startups-2026)
+- SEC-64: [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html), [SaaSCity](https://saascity.io/blog/pre-launch-security-checklist-vibe-coded-startups-2026)
+- SEC-65: [Leanware](https://leanware.co/insights/production-readiness-checklist-vibe-coded-apps), [RaftLabs](https://www.raftlabs.com/blog/vibe-coding-to-production-checklist)
+- SEC-66: [Wavect](https://wavect.io/blog/vibe-code-production-readiness-checklist/)
+- SEC-67: [Leanware](https://leanware.co/insights/production-readiness-checklist-vibe-coded-apps)
+- LAW-01 to LAW-17: official texts and regulator pages linked in each check (EUR-Lex, ICO, GOV.UK, California AG, FTC, CRTC, OPC Canada, OAIC, PDPC, Malaysia PDP, ANPD, PPC, PIPC, OPC NZ, Information Regulator, European Commission), with law-firm summaries where noted. General information, not legal advice.
