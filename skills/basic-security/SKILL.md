@@ -318,6 +318,56 @@ Each check here starts with **In plain words** so the report can explain it to a
 - Fix: allow only relative paths on your own site (start with a single `/`, not `//` or `/\`, no scheme) or match against an allowlist of exact URLs/hosts; fall back to a safe default page; configure the auth provider's redirect allowlist (SEC-48).
 - Source: [OWASP Unvalidated Redirects and Forwards Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) (general web-security practice, added at the owner's request in the 2026-10-19 review)
 
+## 🧬 Supply chain, pipelines, agents and defaults (added from 2026-10-30 research)
+
+**SEC-51 Pin dependencies and don't adopt brand-new releases blindly**
+- In plain words: your app auto-restocks parts from a public supplier. If one delivery is tampered with, you install it without noticing. On Oct 21 2026 a hacked release of the popular LiteLLM package sat on PyPI for about 2 hours and stole credentials from everyone who installed it. This extends SEC-27 (which checks known-vulnerable and fake package names) to compromised new versions.
+- Look for: no lockfile committed (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `poetry.lock`, `uv.lock`, `Pipfile.lock`, `Cargo.lock`); loose ranges (`^`, `~`, `*`, `latest`, unpinned `pip install x`); installs in CI/Docker that ignore the lockfile (`npm install` instead of `npm ci`, `pip install` without hashes/constraints); Docker images using `latest` tags; auto-merge of dependency bumps.
+- Fix: commit lockfiles and install from them (`npm ci`, `pip install --require-hashes` or `uv sync --frozen`); pin exact versions and image digests; configure a minimum release age for new versions where the tool supports it (e.g. Dependabot/Renovate cooldown, `npm`/`pnpm` minimum release age); review bumps instead of auto-merging. **Needs you:** if a known-compromised version was installed, rebuild clean and rotate every secret that machine or container could reach.
+- Source: [LiteLLM security incident report, Oct 21 2026](https://docs.litellm.ai/blog/security-incident-oct-21-2026), [StepSecurity: litellm 1.107.0 compromised](https://www.stepsecurity.io/blog/litellm-1-107-0-compromised-pypi-backdoored-wheels-credential-stealer)
+
+**SEC-52 Lock down your publishing pipeline and tokens**
+- In plain words: leaving your shop's master key in the lock. In the same LiteLLM incident, a developer's GitHub login token leaked (reportedly through logs) and let the attacker switch off protections and publish the bad release.
+- Look for: CI workflows (`.github/workflows/*`) with broad `permissions: write-all` or default write tokens; third-party actions referenced by tag instead of commit SHA; `pull_request_target` running untrusted code; publish/release jobs that run on any branch or fork; no branch protection or required review on the release branch (settings, not in code); tokens or `Authorization` headers printed in logs, debug output or error responses; long-lived personal access tokens used in CI instead of short-lived/OIDC credentials.
+- Fix: set least-privilege `permissions:` per job; pin actions to commit SHAs; publish via trusted publishing/OIDC rather than stored tokens; redact tokens from logs (see SEC-26). **Needs you:** turn on branch protection and required reviews, protect the release environment, and rotate any token that may have been logged.
+- Source: [LiteLLM security incident report, Oct 21 2026](https://docs.litellm.ai/blog/security-incident-oct-21-2026)
+
+**SEC-53 Stop AI agents from posting your files publicly**
+- In plain words: you ask an assistant to "send this photo to a colleague" and it pins it on a public noticeboard. In 2026, AI coding agents that couldn't attach screenshots to pull requests uploaded them to separate public GitHub repos, exposing 13,000+ internal screenshots from 300+ organizations. One agent even saved the workaround as a reusable skill.
+- Look for: agent instructions, saved skills or scripts that create public repos, gists, pastebins or upload files to public hosts (`gh repo create --public`, `gh gist create --public`, `curl` uploads to file-sharing sites); screenshots or test artifacts committed with real customer data, emails, tokens or internal URLs; saved agent skills/rules (`.claude/skills`, `.cursor/rules`, `AGENTS.md`) that describe such upload workarounds.
+- Fix: remove such workarounds and add deny rules for creating public repos/gists in the assistant's settings; keep screenshots with real data out of repos; use the platform's native attachment feature (e.g. GitHub CLI 2.99.0+ media attachments). **Needs you:** check your GitHub account for unexpected public repos and rotate any password or token visible in an exposed image.
+- Source: [Bitdefender: PixelLeak, AI coding agents and GitHub screenshots](https://www.bitdefender.com/en-us/blog/hotforsecurity/pixelleak-ai-coding-agents-github-screenshots)
+
+**SEC-54 Replace default or copy-pasted secrets and passwords**
+- In plain words: every house on the street shipped with the same spare key under the mat. AI models reuse the same placeholder secrets: in a study of 20,656 generated apps, `supersecretkey` appeared in 1,182 of them, and one default JWT secret let researchers forge an admin login. SEC-33 covers weak login-token secrets; this extends it to every secret and default account.
+- Look for: placeholder or example values used as real secrets (`supersecretkey`, `supersecretjwt`, `changeme`, `secret`, `password123`, `admin`/`admin`, `your-secret-key`, values copied from docs/`.env.example`) in session secrets, cookie signing keys, encryption keys, webhook secrets and database passwords; fallbacks like `process.env.SECRET || "secret"`; seeded default admin accounts (`user@example.com:password123`); the same secret reused across dev, staging and production.
+- Fix: generate a unique random value per secret and environment (e.g. `openssl rand -base64 32`); fail startup if a required secret is missing instead of falling back to a default; remove seeded default accounts or force a password change on first login. **Needs you:** any default secret already used in production must be replaced, which signs everyone out and invalidates old tokens.
+- Source: [Invicti: security issues in vibe-coded web apps analyzed](https://www.invicti.com/blog/security-labs/security-issues-in-vibe-coded-web-apps-analyzed)
+
+**SEC-55 Keep AI coding tools updated and careful with untrusted projects**
+- In plain words: your assistant reads a stranger's note and obeys it. In 2026 researchers found flaws in the built-in browsers of Cursor, Copilot, Claude Desktop, VS Code and Codex that could run code or read local files, and several CVEs came from tools trusting config files inside a downloaded project. This goes beyond SEC-40, which checks the config files themselves.
+- Look for: project or team docs and scripts that tell people to open untrusted repos or pages directly in the assistant; auto-approve or "yolo" modes in settings (`--yolo`, `--dangerously-skip-permissions`, "allow all" tool settings) used on projects the user doesn't control; workspace-trust prompts disabled (e.g. `security.workspace.trust.enabled: false`); outdated tool versions where known.
+- Fix: remove blanket auto-approve settings from shared config; re-enable workspace trust. **Needs you:** update Cursor, Copilot, VS Code, Claude Code, Gemini CLI and similar tools to the latest version; open untrusted repos in a disposable container or VM; avoid using the assistant's built-in browser for untrusted pages or local HTML.
+- Source: [The Register: researchers find bugs in 5 AI developer tools, Oct 29 2026](https://www.theregister.com/security/2026/10/29/researchers-find-bugs-in-5-ai-developer-tools-with-openai-and-microsoft-flaws-still-unpatched/5306508), [Stingrai: AI coding assistant CVEs 2026](https://www.stingrai.io/blog/ai-coding-assistant-cves-2026)
+
+**SEC-56 Don't "fix" database permission errors by granting everything**
+- In plain words: a locked door, and the quick fix is removing every lock in the building. From Oct 30 2026 Supabase stops giving new tables automatic access through its public API, so AI builders will hit "permission denied" and may paste in broad `GRANT ALL ... TO anon`. That opens data to anyone and sidesteps the row-level security check (SEC-04).
+- Look for: migrations or SQL with `GRANT ALL`, `GRANT ... ON ALL TABLES IN SCHEMA public`, or `ALTER DEFAULT PRIVILEGES ... GRANT` to `anon` or `public`; `anon` granted insert/update/delete; tables with grants but no `ENABLE ROW LEVEL SECURITY` and policies; the same pattern on other Postgres hosts.
+- Fix: grant only the needed actions to `authenticated` per table, give `anon` read access only on tables meant to be public, and enable row-level security plus policies in the same migration as the table. Don't grant across a whole schema.
+- Source: [VibeTierList: Supabase's 30 Oct change](https://dev.to/vibetierlist/supabases-30-oct-change-the-next-table-your-ai-builder-creates-needs-a-grant-heres-the-2-minute-3c69) (secondary source quoting Supabase's changelog)
+
+**SEC-57 Don't share one long-lived master database password**
+- In plain words: one master key copied into every pocket, so one stolen coat loses the house. Most of October 2026's 28 "Black October" incidents came from long-lived database passwords sitting in env files, CI and consoles; the compromised LiteLLM release read exactly those.
+- Look for: the same database URL/user (often the owner or `postgres` superuser) used by the app, migrations, scripts, CI and AI tools; connection strings in `.env`, CI settings and shell history; databases reachable from the public internet (open `0.0.0.0` access, public host with no allowlist); connections without TLS (`sslmode=disable`); old Postgres, PgBouncer or pgvector versions.
+- Fix: create a separate minimal-rights database user per service (app, migrations, reporting, each AI tool); block public database access and require TLS (`sslmode=require` or stricter); load credentials from a secrets manager. **Needs you:** rotate database passwords on a schedule and now if exposed, and update Postgres/PgBouncer to patched releases (e.g. PgBouncer 1.26.1 fixes a login bypass).
+- Source: [Readyset: Black October 2026 review](https://readyset.io/blog/black-october-what-actually-happened-and-what-to-patch)
+
+**SEC-58 Never run user-supplied commands for AI tool (MCP) servers**
+- In plain words: a "run this for me" box on your site that executes whatever a stranger types. Several AI products let users add an MCP server (a plug-in for AI tools) where the user's command went straight to the server's shell, giving remote code execution.
+- Look for: settings, admin pages or API routes where users enter an MCP server `command`/`args`/URL that the backend launches (`StdioServerParameters`, `child_process.spawn`/`exec`, `subprocess` fed from request data); allowlists that still permit exec flags (`npx -c`, `node -e`, `python -c`, `sh -c`); prompt-injectable ways for model output to edit the MCP config; tool results from MCP servers passed to the model as trusted instructions.
+- Fix: allow only a fixed list of known servers chosen by id, never pass user text as a command or arguments, require human approval for MCP config changes, run servers in a sandbox with minimal permissions, and treat anything an MCP tool returns as untrusted data (see SEC-21).
+- Source: [OX Security: MCP STDIO supply-chain advisory](https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/)
+
 ## 📱 Mobile (only if it's a mobile app)
 
 **SEC-M1 No API keys in the app bundle**
@@ -374,3 +424,11 @@ Each check here starts with **In plain words** so the report can explain it to a
 - SEC-48: [Ubserve Supabase checklist](https://ubserve.com/platform-guides/supabase-security-checklist-ai-built-apps)
 - SEC-49: [Ubserve Supabase checklist](https://ubserve.com/platform-guides/supabase-security-checklist-ai-built-apps)
 - SEC-50: [OWASP Unvalidated Redirects and Forwards Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) (general web-security practice, added at the owner's request in the 2026-10-19 review)
+- SEC-51: [LiteLLM security incident report](https://docs.litellm.ai/blog/security-incident-oct-21-2026), [StepSecurity](https://www.stepsecurity.io/blog/litellm-1-107-0-compromised-pypi-backdoored-wheels-credential-stealer)
+- SEC-52: [LiteLLM security incident report](https://docs.litellm.ai/blog/security-incident-oct-21-2026)
+- SEC-53: [Bitdefender: PixelLeak](https://www.bitdefender.com/en-us/blog/hotforsecurity/pixelleak-ai-coding-agents-github-screenshots)
+- SEC-54: [Invicti: security issues in vibe-coded web apps analyzed](https://www.invicti.com/blog/security-labs/security-issues-in-vibe-coded-web-apps-analyzed)
+- SEC-55: [The Register, Oct 29 2026](https://www.theregister.com/security/2026/10/29/researchers-find-bugs-in-5-ai-developer-tools-with-openai-and-microsoft-flaws-still-unpatched/5306508), [Stingrai CVE roundup](https://www.stingrai.io/blog/ai-coding-assistant-cves-2026)
+- SEC-56: [VibeTierList: Supabase's 30 Oct change](https://dev.to/vibetierlist/supabases-30-oct-change-the-next-table-your-ai-builder-creates-needs-a-grant-heres-the-2-minute-3c69)
+- SEC-57: [Readyset: Black October 2026 review](https://readyset.io/blog/black-october-what-actually-happened-and-what-to-patch)
+- SEC-58: [OX Security: MCP STDIO advisory](https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/)
