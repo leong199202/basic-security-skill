@@ -23,6 +23,8 @@ Claude reads your code, checks it against every item in this skill, fixes what i
 
 Claude makes the fixes directly in your project folder. Look over the changes before you commit them.
 
+The first time you run it, Claude asks whether you want the optional **weekly research** and which AI should run it (see below). Answer once and it won't ask again.
+
 ### Review only (no changes)
 
 Add **"audit only"** to the command if you just want a check-up without anything being touched:
@@ -54,6 +56,32 @@ Every run ends with a table, one row per check, with "Needs you" items listed fi
 Each row also says where in the code it is and, in plain words, what changed or what to do.
 
 **Tip:** run it again after adding a big new feature, since new features can open new holes.
+
+## Weekly research (any AI model)
+
+Optional. Once a week, an AI of your choice looks up the newest security problems in AI-built apps and lists only the ones this skill doesn't cover yet, each with an everyday example, a one-line fix and a source link. You pick which to add and dismiss the rest.
+
+Think of it like a weekly newsletter that only tells you about the risks your checklist is missing.
+
+It works with **whatever AI you use**: Claude, ChatGPT, Gemini, a local model through Ollama, and so on.
+
+**Set it up when you install the skill.** Pick one:
+
+- **Let the skill ask you.** The first time you run "basic security", it asks whether to turn weekly research on and which AI to use, and saves your answer to `~/.config/basic-security/research.env`.
+- **Run the setup script** from a copy of this repo: `scripts/setup-research.sh`. It asks the same questions, stores your API key privately (only you can read the file) and can add a weekly cron job for you.
+- **Use GitHub Actions** (no computer needed): in your copy of this repo, go to Settings, Secrets and variables, Actions. Add variables `AI_BASE_URL` and `AI_MODEL` and a secret `AI_API_KEY`. The [weekly workflow](.github/workflows/weekly-research.yml) then runs every Monday and opens an issue with the report. Without those settings it does nothing.
+- **No scheduler at all:** paste [`weekly-research-prompt.md`](skills/basic-security/weekly-research-prompt.md) plus `SKILL.md` into any AI chat once a week.
+
+**Choosing your AI.** `scripts/weekly-research.sh` reaches your model in one of two ways:
+
+| Setting | Use it for | Example |
+|---|---|---|
+| `AI_COMMAND` | Any AI command-line tool that reads a prompt and prints an answer | `claude -p`, `llm -m <model>`, `ollama run <model>` |
+| `AI_BASE_URL` + `AI_MODEL` + `AI_API_KEY` | Any provider with an OpenAI-compatible API | OpenAI `https://api.openai.com/v1`, Gemini `https://generativelanguage.googleapis.com/v1beta/openai`, Anthropic `https://api.anthropic.com/v1`, OpenRouter `https://openrouter.ai/api/v1`, Ollama `http://localhost:11434/v1` |
+
+Settings you put in the environment win over the saved file, so you can switch models for one run, for example `AI_MODEL=<other-model> scripts/weekly-research.sh`. Reports are saved to `research/reports/<date>.md`. To turn it off, run the setup script again and answer "no".
+
+**Good to know:** the research is only as fresh as your AI's access to the web. A model without web search falls back on what it already knows and says so at the top of the report.
 
 ## Structure
 
@@ -96,4 +124,4 @@ Every week the top AI-coding security issues are reviewed against this skill. Is
 
 ---
 
-Last updated: 2026-10-30
+Last updated: 2026-10-31
