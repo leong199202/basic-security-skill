@@ -90,10 +90,21 @@ Every week the top AI-coding security issues are reviewed against this skill. Is
 - SEC-01 to SEC-30 and SEC-M1 to SEC-M4 are based on [The Complete Pre-Launch Security Checklist for Vibe-Coded Apps](https://app.notion.com/p/The-Complete-Pre-Launch-Security-Checklist-for-Vibe-Coded-Apps-3b7512560bf28158a7a9e80ce3849e1e) (Notion).
 - SEC-31 to SEC-40 came from the 2026-10 research review, and SEC-41 to SEC-50 from the 2026-10-19 reviews, and SEC-51 to SEC-58 from the 2026-10-30 review. SEC-59 to SEC-67 and LAW-01 to LAW-17 came from the 2026-10-30 pre-launch checklist review. Each check's source links are listed in the **Sources** section of [`SKILL.md`](skills/basic-security/SKILL.md#sources).
 
+## Disclaimer
+
+Please read this before you rely on this skill.
+
+- **Provided "as is".** This skill is shared for free, with no warranty of any kind. The authors and contributors are not responsible for any loss, damage, breach, fine or other problem that comes from using it, or from relying on its results.
+- **Not professional advice.** Nothing here is legal, security, compliance or other professional advice. The privacy-law checks (LAW-01 to LAW-17) are general information only, laws change often, and they may not match your situation or country.
+- **It can miss things.** Automated checks and AI-made fixes can be wrong or incomplete. A clean result does not mean your app is secure, and it is not a guarantee that your app meets any law, regulation or standard. Always review every change yourself before you ship it.
+- **Using it commercially?** If you use this skill for a business, a paid product, or an app that handles other people's data or money, you are strongly advised to have your app and your legal obligations checked by a qualified expert, such as a security professional or lawyer with years of real experience in this area, before you launch.
+
+By using this skill you accept that you use it at your own risk.
+
 ## License
 
 [MIT](LICENSE). Anyone can use, copy, change and share this skill, including for commercial projects, as long as they keep the license notice. It comes with no warranty: it helps catch common security gaps but is not a guarantee that an app is secure.
 
 ---
 
-Last updated: 2026-10-30
+Last updated: 2026-10-31

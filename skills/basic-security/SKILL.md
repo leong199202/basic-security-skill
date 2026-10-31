@@ -244,7 +244,7 @@ Each check here starts with **In plain words** so the report can explain it to a
 - In plain words: a download link like `?file=invoice.pdf` is changed to `?file=../../.env`, and the server hands over your secret keys file. "Fetch file X" turns into "fetch any file."
 - Look for: file reads, downloads, includes or deletes built from user input (`fs.readFile(path.join(dir, req.query.file))`, `res.sendFile(req.params.name)`, `open(request.args['f'])`, `send_file`, zip extraction without path checks).
 - Fix: look files up by ID from the database instead of user-supplied names; otherwise resolve the full path and confirm it stays inside the allowed folder (`path.resolve` + prefix check, `os.path.realpath`), reject `..` and absolute paths; check zip entries before extracting.
-- Source: [OWASP: Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal), [OWASP Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) (general web-security practice, added at the owner's request in the 2026-10 review)
+- Source: [OWASP: Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal), [OWASP Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) (general web-security practice, added in the 2026-10 review)
 
 ## 🛠️ AI coding tools in the repo (added from 2026-10 research)
 
@@ -316,7 +316,7 @@ Each check here starts with **In plain words** so the report can explain it to a
 - In plain words: many apps use a link like `login?next=/dashboard` to send you back after logging in. If the app accepts any address there, a scammer sends `login?next=evil-site.com`; you log in on the real site and land on a fake copy that asks for your password again.
 - Look for: redirects built from request values (`next`, `redirect`, `redirect_to`, `returnUrl`, `callbackUrl`, `continue`, `url`) in login, logout, OAuth callback, email-confirmation and payment-return handlers (`res.redirect(req.query.next)`, `redirect(request.args.get('next'))`, `router.push(searchParams.get('next'))`, `window.location = params.get('url')`); checks like `startsWith('/')` that still allow `//evil.com` or `/\evil.com`.
 - Fix: allow only relative paths on your own site (start with a single `/`, not `//` or `/\`, no scheme) or match against an allowlist of exact URLs/hosts; fall back to a safe default page; configure the auth provider's redirect allowlist (SEC-48).
-- Source: [OWASP Unvalidated Redirects and Forwards Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) (general web-security practice, added at the owner's request in the 2026-10-19 review)
+- Source: [OWASP Unvalidated Redirects and Forwards Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) (general web-security practice, added in the 2026-10-19 review)
 
 ## 🧬 Supply chain, pipelines, agents and defaults (added from 2026-10-30 research)
 
@@ -593,7 +593,7 @@ How to run this section:
 
 ## Sources
 
-- Base checklist (SEC-01 to SEC-30, SEC-M1 to SEC-M4): [The Complete Pre-Launch Security Checklist for Vibe-Coded Apps](https://app.notion.com/p/The-Complete-Pre-Launch-Security-Checklist-for-Vibe-Coded-Apps-3b7512560bf28158a7a9e80ce3849e1e) (Notion), contributed by the skill's owner.
+- Base checklist (SEC-01 to SEC-30, SEC-M1 to SEC-M4): [The Complete Pre-Launch Security Checklist for Vibe-Coded Apps](https://app.notion.com/p/The-Complete-Pre-Launch-Security-Checklist-for-Vibe-Coded-Apps-3b7512560bf28158a7a9e80ce3849e1e) (Notion).
 - 2026-10 research additions:
 - SEC-31: [Valtik Studios](https://www.valtikstudios.com/blog/vibe-coded-apps-69-vulns-pattern-analysis-2026), [Vibe-Eval 2026 report](https://vibe-eval.com/updates/2026-ai-coding-security-report/)
 - SEC-32: [Valtik Studios](https://www.valtikstudios.com/blog/vibe-coded-apps-69-vulns-pattern-analysis-2026), [Launch Ready Code](https://launchreadycode.com/resources/state-of-vibe-code-security-june-2026), [Arnica](https://www.arnica.io/blog/vibe-coding-security-risks)
@@ -603,7 +603,7 @@ How to run this section:
 - SEC-36: [Vibe-Eval 14 patterns](https://vibe-eval.com/ai-security/vibe-coding-vulnerabilities/), [Vibe App Scanner](https://vibeappscanner.com/issues/supabase)
 - SEC-37: [Vibe App Scanner](https://vibeappscanner.com/issues/supabase)
 - SEC-38: [Vibe-Eval 14 patterns](https://vibe-eval.com/ai-security/vibe-coding-vulnerabilities/), [Arnica](https://www.arnica.io/blog/vibe-coding-security-risks)
-- SEC-39: [OWASP: Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal), [OWASP Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) (general web-security practice, added at the owner's request in the 2026-10 review)
+- SEC-39: [OWASP: Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal), [OWASP Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html) (general web-security practice, added in the 2026-10 review)
 - SEC-40: [MintMCP](https://www.mintmcp.com/blog/security-vulnerabilities-with-mcp), [Cloud Security Alliance](https://labs.cloudsecurityalliance.org/research/csa-research-note-mcp-ai-coding-assistant-credential-theft-2/)
 - 2026-10-19 research additions:
 - SEC-41: [MyBroadband on the Bootlegger dashboard exposure](https://mybroadband.co.za/news/security/672647-ceo-of-top-south-african-coffee-franchise-responds-after-vibe-coded-web-application-exposed-sensitive-data.html)
@@ -616,7 +616,7 @@ How to run this section:
 - SEC-47: [Anish Gandhi: Supabase Realtime broadcast security](https://anishgandhi.com/supabase-realtime-broadcast-security-boundary/), [Ubserve Supabase checklist](https://ubserve.com/platform-guides/supabase-security-checklist-ai-built-apps)
 - SEC-48: [Ubserve Supabase checklist](https://ubserve.com/platform-guides/supabase-security-checklist-ai-built-apps)
 - SEC-49: [Ubserve Supabase checklist](https://ubserve.com/platform-guides/supabase-security-checklist-ai-built-apps)
-- SEC-50: [OWASP Unvalidated Redirects and Forwards Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) (general web-security practice, added at the owner's request in the 2026-10-19 review)
+- SEC-50: [OWASP Unvalidated Redirects and Forwards Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) (general web-security practice, added in the 2026-10-19 review)
 - SEC-51: [LiteLLM security incident report](https://docs.litellm.ai/blog/security-incident-oct-21-2026), [StepSecurity](https://www.stepsecurity.io/blog/litellm-1-107-0-compromised-pypi-backdoored-wheels-credential-stealer)
 - SEC-52: [LiteLLM security incident report](https://docs.litellm.ai/blog/security-incident-oct-21-2026)
 - SEC-53: [Bitdefender: PixelLeak](https://www.bitdefender.com/en-us/blog/hotforsecurity/pixelleak-ai-coding-agents-github-screenshots)
