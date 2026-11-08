@@ -106,6 +106,7 @@ Each check has a stable ID so new threats can be compared against what is alread
 | Launch readiness (added 2026-10-30) | SEC-59 – SEC-67 |
 | Digital and privacy law by region (added 2026-10-30) | LAW-01 – LAW-17 |
 | AI agents, assistant settings and encrypted connections (added 2026-11-08) | SEC-68 – SEC-72 |
+| Request limits, tokens, logs, runtimes and key rotation (added 2026-11-08) | SEC-73 – SEC-77 |
 | Mobile | SEC-M1 – SEC-M4 |
 
 New checks are appended with new IDs; existing IDs are never renumbered.
@@ -117,7 +118,7 @@ Every week the top AI-coding security issues are reviewed against this skill. Is
 ## Credits
 
 - SEC-01 to SEC-30 and SEC-M1 to SEC-M4 are based on [The Complete Pre-Launch Security Checklist for Vibe-Coded Apps](https://app.notion.com/p/The-Complete-Pre-Launch-Security-Checklist-for-Vibe-Coded-Apps-3b7512560bf28158a7a9e80ce3849e1e) (Notion).
-- SEC-31 to SEC-40 came from the 2026-10 research review, and SEC-41 to SEC-50 from the 2026-10-19 reviews, and SEC-51 to SEC-58 from the 2026-10-30 review. SEC-59 to SEC-67 and LAW-01 to LAW-17 came from the 2026-10-30 pre-launch checklist review, and SEC-68 to SEC-72 from the 2026-11-08 review. Each check's source links are listed in the **Sources** section of [`SKILL.md`](skills/basic-security/SKILL.md#sources).
+- SEC-31 to SEC-40 came from the 2026-10 research review, and SEC-41 to SEC-50 from the 2026-10-19 reviews, and SEC-51 to SEC-58 from the 2026-10-30 review. SEC-59 to SEC-67 and LAW-01 to LAW-17 came from the 2026-10-30 pre-launch checklist review, and SEC-68 to SEC-77 from the 2026-11-08 reviews. Each check's source links are listed in the **Sources** section of [`SKILL.md`](skills/basic-security/SKILL.md#sources).
 
 ## Disclaimer
 
